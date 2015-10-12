@@ -1,0 +1,41 @@
+#!/bin/bash
+
+source config.txt
+
+BEST_SCORE=1024
+BEST_USED_STONE=256
+
+SLEEP_TIME=2
+
+echo -n 'Waiting for inital solution ... '
+while [ ! -e solution.txt ]
+do
+  sleep $SLEEP_TIME
+done
+echo 'done!'
+
+while :
+do
+  SCORE=`cat score.txt | cut -d " " -f 1`
+  USED_STONE=`cat score.txt | cut -d " " -f 2`
+
+  if (( $SCORE < $BEST_SCORE )); then
+    echo '====== Better solution found! ======'
+    echo 'Submit:'
+    curl -# "${HOST}answer" -F "token=$TOKEN" -F "answer=@solution.txt"
+    BEST_SCORE=$SCORE
+    BEST_USED_STONE=$USED_STONE
+    cp solution.txt best_so_far_solution.txt
+    cp score.txt best_so_far_score.txt
+  elif (( $SCORE == $BEST_SCORE && $USED_STONE < $BEST_USED_STONE )); then
+    echo '==== Less stone solution found! ===='
+    echo 'Submit:'
+    curl -# "${HOST}answer" -F "token=$TOKEN" -F "answer=@solution.txt"
+    BEST_SCORE=$SCORE
+    BEST_USED_STONE=$USED_STONE
+    cp solution.txt best_so_far_solution.txt
+    cp score.txt best_so_far_score.txt
+  fi
+
+  sleep $SLEEP_TIME
+done

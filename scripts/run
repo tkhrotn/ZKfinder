@@ -1,0 +1,35 @@
+#!/bin/bash
+
+source config.txt
+
+NUM=$1
+
+curl -# -o quest${NUM}.txt ${HOST}quest${NUM}.txt?token=$TOKEN
+
+./solver -a $SEED1 -b $SEED2 -c $SEED3 -t $TERMINATION1 < quest${NUM}.txt
+
+NUM_STONE=`cat problem_stats.txt | tail -n 1 - | cut -d " " -f 2`
+PERMISSIBLE=0
+WIDTH=$(( (NUM_STONE - PERMISSIBLE) / 2 ))
+while :
+do
+  ./solver -s -p $PERMISSIBLE -t $TERMINATION2 < quest${NUM}.txt
+    
+  SCORE=`cat score.txt | cut -d " " -f 1`
+  if (( $SCORE == 0 )); then
+    PERMISSIBLE=$(( PERMISSIBLE - WIDTH ))
+  else
+    PERMISSIBLE=$(( PERMISSIBLE + WIDTH ))
+  fi
+  WIDTH=$(( WIDTH / 2 ))
+  if (( $WIDTH == 0 )); then
+    WIDTH=1
+  fi
+
+  if [ $PERMISSIBLE -lt 0 ]; then
+    break
+  fi
+done
+
+echo "Best solution found! Exit run."
+
